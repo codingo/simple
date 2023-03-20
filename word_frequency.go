@@ -117,13 +117,15 @@ func createFrequencies(wordMap map[string]int) []WordFrequency {
 }
 
 func printFrequencies(frequencies []WordFrequency, number int) {
-	for i := 0; i < number && i < len(frequencies); i++ {
+	count := 0
+	for i := 0; count < number && i < len(frequencies); i++ {
 		word := strings.TrimSpace(frequencies[i].word)
 		if word == "" {
 			continue
 		}
 
 		fmt.Printf("%s:%d\n", word, frequencies[i].count)
+		count++
 	}
 }
 
