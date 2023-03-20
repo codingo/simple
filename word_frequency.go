@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"regexp"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -170,9 +171,11 @@ func extractWords(url string) ([]string, error) {
 	}
 
 	words := []string{}
+	wordRegex := regexp.MustCompile(`\w+`)
 	doc.Find("body").Each(func(_ int, s *goquery.Selection) {
 		text := strings.TrimSpace(s.Text())
-		words = append(words, strings.Split(text, " ")...)
+		matches := wordRegex.FindAllString(text, -1)
+		words = append(words, matches...)
 	})
 
 	return words, nil
