@@ -42,8 +42,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	wordMap := make(map[string]int)
-
 	for _, url := range urls {
 		wordList, err := extractWords(url)
 		if err != nil {
@@ -51,17 +49,19 @@ func main() {
 			continue
 		}
 
+		wordMap := make(map[string]int)
 		for _, word := range wordList {
 			word = strings.ToLower(word)
 			if !excludedWords[word] {
 				wordMap[word]++
 			}
 		}
+
+		frequencies := createFrequencies(wordMap)
+
+		fmt.Printf("\nResults for %s:\n", url)
+		printFrequencies(frequencies, *number)
 	}
-
-	frequencies := createFrequencies(wordMap)
-
-	printFrequencies(frequencies, *number)
 }
 
 func loadExcludedWords(filename string) (map[string]bool, error) {
