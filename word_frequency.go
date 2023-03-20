@@ -123,6 +123,10 @@ func printFrequencies(frequencies []WordFrequency, number int) {
 }
 
 func extractWords(url string) ([]string, error) {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		url = "https://" + url
+	}
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
