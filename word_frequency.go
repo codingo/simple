@@ -82,3 +82,98 @@ func main() {
 
 	wg.Wait()
 }
+
+func loadExcludedWords(filename string) (map[string]bool, error) {
+	excludedWords := make(map[string]bool)
+
+	if filename == "" {
+		return excludedWords, nil
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		excludedWords[strings.ToLower(scanner.Text())] = true
+	}
+
+	return excludedWords, nil
+}
+
+func loadURLs(filename string) ([]string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	urls := []string{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		url := scanner.Text()
+		urls = append(urls, url)
+	}
+
+	return urls, nil
+}
+
+func createFrequencies(wordMap map[string]int) []WordFrequency {
+	frequencies := []WordFrequency{}
+
+	for word, count := range wordMap {
+		frequencies = append(frequencies, WordFrequency{word, count})
+	}
+
+	sort.Slice(frequencies, func(i, j int) bool {
+		return frequencies[i].count > frequencies[j].count
+	})
+
+	return frequencies
+}
+
+func printFrequencies(frequencies []WordFrequency, number int) {
+	count := 0
+	for i := 0; count < number && i < len(frequencies); i++ {
+		word := strings.TrimSpace(frequencies[i].word)
+		if word == "" {
+			continue
+		}
+
+		fmt.Printf("%s:%d\n", word, frequencies[i].count)
+		count++
+	}
+}
+
+func extractWords(url string) ([]string, error) {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		url = "https://" + url
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
+	if err != nil {
+		return nil, err
+	}
+
+	words := []string{}
+	doc.Find("body").Each(func(_ int, s *goquery.Selection) {
+		text := strings.TrimSpace(s.Text())
+		words = append(words, strings.Split(text, " ")...)
+	})
+
+	return words, nil
+}
