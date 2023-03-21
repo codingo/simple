@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -10,6 +11,44 @@ import (
 type Key struct {
 	Row int
 	Col int
+}
+
+type KeyboardLayout struct {
+	Name   string
+	Layout [][]string
+}
+
+var layouts = []KeyboardLayout{
+	{
+		Name: "qwerty",
+		Layout: [][]string{
+			{"`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "+"},
+			{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"},
+			{"a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "enter"},
+			{"shift", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "shift"},
+			{"ctrl", "alt", "space", "alt", "ctrl"},
+		},
+	},
+	{
+		Name: "azerty",
+		Layout: [][]string{
+			{"²", "&", "é", "\"", "'", "(", "-", "è", "_", "ç", "à", ")", "=", "+"},
+			{"a", "z", "e", "r", "t", "y", "u", "i", "o", "p", "^", "$", "\\"},
+			{"q", "s", "d", "f", "g", "h", "j", "k", "l", "m", "ù", "*", "enter"},
+			{"shift", "w", "x", "c", "v", "b", "n", ",", ";", ":", "!", "shift"},
+			{"ctrl", "alt", "space", "alt", "ctrl"},
+		},
+	},
+	{
+		Name: "dvorak",
+		Layout: [][]string{
+			{"`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "[", "]", "\\"},
+			{"'", ",", ".", "p", "y", "f", "g", "c", "r", "l", "/", "=", "+"},
+			{"a", "o", "e", "u", "i", "d", "h", "t", "n", "s", "-", "enter"},
+			{"shift", ";", "q", "j", "k", "x", "b", "m", "w", "v", "z", "shift"},
+			{"ctrl", "alt", "space", "alt", "ctrl"},
+		},
+	},
 }
 
 func main() {
@@ -22,50 +61,26 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	keyboardLayout := getKeyboardLayout(*keyboardType)
+	keyboardLayout, err := getKeyboardLayout(*keyboardType)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	for i := 0; i < *iterations; i++ {
 		walkLength := rand.Intn(*finish-*start+1) + *start
-		walk := generateKeyboardWalk(keyboardLayout, walkLength)
+		walk := generateKeyboardWalk(keyboardLayout.Layout, walkLength)
 		fmt.Println(walk)
 	}
 }
 
-func getKeyboardLayout(keyboardType string) [][]string {
-	qwerty := [][]string{
-		{"`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "+"},
-		{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"},
-		{"a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "enter"},
-		{"shift", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "shift"},
-		{"ctrl", "alt", "space", "alt", "ctrl"},
+func getKeyboardLayout(keyboardType string) (KeyboardLayout, error) {
+	for _, layout := range layouts {
+		if layout.Name == keyboardType {
+			return layout, nil
+		}
 	}
-
-	azerty := [][]string{
-		{"²", "&", "é", "\"", "'", "(", "-", "è", "_", "ç", "à", ")", "=", "+"},
-		{"a", "z", "e", "r", "t", "y", "u", "i", "o", "p", "^", "$", "\\"},
-		{"q", "s", "d", "f", "g", "h", "j", "k", "l", "m", "ù", "*", "enter"},
-		{"shift", "w", "x", "c", "v", "b", "n", ",", ";", ":", "!", "shift"},
-		{"ctrl", "alt", "space", "alt", "ctrl"},
-	}
-
-	dvorak := [][]string{
-		{"`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "[", "]", "\\"},
-		{"'", ",", ".", "p", "y", "f", "g", "c", "r", "l", "/", "=", "+"},
-		{"a", "o", "e", "u", "i", "d", "h", "t", "n", "s", "-", "enter"},
-		{"shift", ";", "q", "j", "k", "x", "b", "m", "w", "v", "z", "shift"},
-		{"ctrl", "alt", "space", "alt", "ctrl"},
-	}
-
-	switch keyboardType {
-	case "qwerty":
-		return qwerty
-	case "azerty":
-		return azerty
-	case "dvorak":
-		return dvorak
-	default:
-		return qwerty
-	}
+	return KeyboardLayout{}, errors.New("Invalid keyboard layout")
 }
 
 func generateKeyboardWalk(layout [][]string, length int) string {
