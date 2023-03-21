@@ -105,6 +105,15 @@ func generateKeyboardWalk(layout [][]string, length int) string {
 		newRow := (currentPosition.Row + nextRow + len(layout)) % len(layout)
 		newCol := (currentPosition.Col + nextCol + len(layout[newRow])) % len(layout[newRow])
 
+		// Make sure the next key is adjacent in a row or column
+		for newRow != currentPosition.Row && newCol != currentPosition.Col {
+			nextRow = rand.Intn(3) - 1
+			nextCol = rand.Intn(3) - 1
+
+			newRow = (currentPosition.Row + nextRow + len(layout)) % len(layout)
+			newCol = (currentPosition.Col + nextCol + len(layout[newRow])) % len(layout[newRow])
+		}
+
 		currentKey = layout[newRow][newCol]
 	}
 
